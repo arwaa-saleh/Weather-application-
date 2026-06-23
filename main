@@ -1,0 +1,69 @@
+import requests
+import json
+
+
+class WeatherApp:
+    def __init__(self):
+        self.api_key = "YOUR_API_KEY"
+        self.history_file = "history.json"
+        self.history = self.load_history()
+
+    def get_weather(self, city):
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={self.api_key}&units=metric"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+
+            weather_info = {
+                "city": city,
+                "temp": data["main"]["temp"],
+                "weather": data["weather"][0]["description"]
+            }
+
+            print(f"\nCity: {city}")
+            print(f"Temp: {weather_info['temp']}°C")
+            print(f"Weather: {weather_info['weather']}")
+
+            self.save_history(weather_info)
+        else:
+            print("City not found")
+
+    def save_history(self, data):
+        self.history.append(data)
+        with open(self.history_file, "w") as f:
+            json.dump(self.history, f, indent=4)
+
+    def load_history(self):
+        try:
+            with open(self.history_file, "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return []
+
+    def show_history(self):
+        for item in self.history:
+            print(f"{item['city']} - {item['temp']}°C - {item['weather']}")
+
+
+app = WeatherApp()
+
+while True:
+    print("\n1. Get Weather")
+    print("2. Show History")
+    print("3. Exit")
+
+    choice = input("Enter choice: ")
+
+    if choice == "1":
+        city = input("City: ")
+        app.get_weather(city)
+
+    elif choice == "2":
+        app.show_history()
+
+    elif choice == "3":
+        break
+
+    else:
+        print("Invalid")
